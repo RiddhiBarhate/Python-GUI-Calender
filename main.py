@@ -57,4 +57,26 @@ if 1 <= current_month <= 12:
 else:
     print(f"Error: Invalid current month {current_month}")
 
+#function to change the month and year
+def change_month(delta):
+    global current_month, current_year
+
+    current_month += delta
+
+    if current_month > 12:
+        current_month = 1
+        current_year += 1
+    elif current_month < 1:
+        current_month = 12
+        current_year -= 1
+
+    display_calendar(current_month,current_year)
+
+#to change the month and year add buttons
+prev_button = Button(window, text="<< Previous", command=lambda: change_month(-1))
+prev_button.pack(side=LEFT,padx=20)
+
+next_button = Button(window, text="Next >>", command=lambda: change_month(1))
+next_button.pack(side=RIGHT,padx=20)
+
 window.mainloop()
