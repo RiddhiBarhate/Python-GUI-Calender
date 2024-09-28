@@ -1,6 +1,8 @@
 from tkinter import *
 import calendar
 from datetime import datetime
+import json
+from tkinter import simpledialog, messagebox
 
 #create the main window
 window = Tk()
@@ -25,6 +27,54 @@ current_month = now.month
 #label to show selected day
 selected_day_label = Label(window, text="Selected day : ")
 selected_day_label.pack(pady=10)
+
+#load and save event functions
+events = {}
+
+#track the delete event button globally
+delete_event_button = None
+
+#function to schedule an event
+def schedule_event(day, month, year):
+    event_text = simpledialog.askstring("Event", f"{day}-{month}-{year}")
+    if event_text:
+        event_date = f"{day}-{month}-{year}"
+        if event_date in events:
+            events[event_date].append(event_text)
+        else:
+            events[event_date] = [event_text]
+        save_events()
+
+#function to delete an event
+def delete_event(day, month, year):
+    event_date = f"{day}-{month}-{year}"
+    if event_date in events:
+        event_list = events[event_date]
+        event_to_delete = simpledialog.askstring("Delete Event", f"Choose an event to delete:\n{', '.join(event_list)}\nType the exact event to delete:")
+        if event_to_delete in event_list:
+            event_list.remove(event_to_delete)
+            if not event_list:  # Remove the date entry if no events left
+                del events[event_date]
+            save_events()
+            selected_day_label.config(text=f"Deleted event from {event_date}.")
+        else:
+            messagebox.showerror("Error", "Event not found!")
+    else:
+        messagebox.showinfo("Info", f"No events for {event_date} to delete.")
+
+#function to save events to a JSON file
+def save_events():
+    with open("events.json","w") as f:
+        json.dump(events,f)
+
+#fuction to load events from a JSON file
+def load_events():
+    global events
+    try:
+        with open("events.json","r") as f:
+            events = json.load(f)
+    except FileNotFoundError:
+        events = {}
 
 #function to display current month and year
 def display_calendar(month, year):
@@ -72,9 +122,26 @@ if 1 <= current_month <= 12:
 else:
     print(f"Error: Invalid current month {current_month}")
 
-#function to handle day click events
+#function to handle day click events and show events
 def on_day_click(day):
-    selected_day_label.config(text=f"Selected day {day}")
+    global delete_event_button
+
+    schedule_event(day, current_month, current_year)
+
+    event_date = f"{day}-{current_month}-{current_year}"
+    if event_date in events:
+        event_list = "\n".join(events[event_date])
+        selected_day_label.config(text=f"Events for {event_date}:\n{event_list}")
+
+         # Remove the old delete button if it exists
+        if delete_event_button:
+            delete_event_button.destroy()
+            
+        # Add a button to delete events
+        delete_event_button = Button(window, text="Delete Event", command=lambda: delete_event(day, current_month, current_year))
+        delete_event_button.pack(pady=10)
+    else:
+        selected_day_label.config(text=f"No events for {event_date}")
 
 #function to go to button
 def go_to_today():
@@ -95,6 +162,9 @@ def change_month(delta):
         current_year -= 1
 
     display_calendar(current_month,current_year)
+
+#load the event when starting the program
+load_events()
 
 #to change the month and year add buttons
 prev_button = Button(window, text="<< Previous", command=lambda: change_month(-1), font=30, bg="lightgray")
