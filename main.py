@@ -31,8 +31,10 @@ selected_day_label.pack(pady=10)
 #load and save event functions
 events = {}
 
-#track the delete event button globally
+#global variables to track
 delete_event_button = None
+edit_event_button = None
+dark_mode_on = False
 
 #function to schedule an event
 def schedule_event(day, month, year):
@@ -44,6 +46,18 @@ def schedule_event(day, month, year):
         else:
             events[event_date] = [event_text]
         save_events()
+
+#function to edit an event
+def edit_event(event_date):
+    if event_date in events:
+        event_text = simpledialog.askstring("Edit Event", f"Edit event for date {event_date}:")
+        if event_text:
+            events[event_date] = [event_text]
+            save_events()
+            messagebox.showinfo("Event Edited", f"Event for {event_date} has been updated.")
+            selected_day_label.config(text=f"Events for {event_date}:\n{event_text}")
+    else:
+        messagebox.showerror("Error", f"No event found for {event_date}.")
 
 #function to delete an event
 def delete_event(day, month, year):
@@ -75,6 +89,18 @@ def load_events():
             events = json.load(f)
     except FileNotFoundError:
         events = {}
+
+#function to toggle dark mode
+def toggle_dark_mode():
+    global dark_mode_on
+    dark_mode_on = not dark_mode_on
+    if dark_mode_on:
+        window.config(bg="black")
+        label.config(bg="black", fg="white")
+        
+    else:
+        window.config(bg="#ADD8E6")
+        label.config(bg="#ADD8E6", fg="black")
 
 #function to display current month and year
 def display_calendar(month, year):
@@ -124,7 +150,7 @@ else:
 
 #function to handle day click events and show events
 def on_day_click(day):
-    global delete_event_button
+    global delete_event_button, edit_event_button
 
     schedule_event(day, current_month, current_year)
 
@@ -133,11 +159,16 @@ def on_day_click(day):
         event_list = "\n".join(events[event_date])
         selected_day_label.config(text=f"Events for {event_date}:\n{event_list}")
 
-         # Remove the old delete button if it exists
+         # Remove the old delete button and event button if it exists
         if delete_event_button:
             delete_event_button.destroy()
+        if edit_event_button:
+            edit_event_button.destroy()
             
-        # Add a button to delete events
+        # Add a button to delete events and edit events
+        edit_event_button = Button(window, text="Edit Event", command=lambda d=event_date :edit_event(d))
+        edit_event_button.pack(pady=10)
+
         delete_event_button = Button(window, text="Delete Event", command=lambda: delete_event(day, current_month, current_year))
         delete_event_button.pack(pady=10)
     else:
@@ -147,6 +178,18 @@ def on_day_click(day):
 def go_to_today():
     now = datetime.now()
     display_calendar(now.month, now.year)
+
+#function to add recurring events
+def add_recurring_event():
+    event_text = simpledialog.askstring("Recurring Event", "Enter recurring event:")
+    if event_text:
+        for month in range(1,13):
+            event_date = f"{current_day}-{month}-{current_year}"
+            if event_date in events:
+                events[event_date].append(event_text)
+            else:
+                events[event_date] = [event_text]
+        save_events()
 
 #function to change the month and year
 def change_month(delta):
@@ -172,6 +215,14 @@ prev_button.pack(side=LEFT,padx=20)
 
 next_button = Button(window, text="Next >>", command=lambda: change_month(1), font=30, bg="lightgray")
 next_button.pack(side=RIGHT,padx=20)
+
+#button for dark mode
+dark_mode_button = Button(window, text="Dark Mode", command=toggle_dark_mode)
+dark_mode_button.pack(pady=10)
+
+#button to add recurring events
+recurring_button = Button(window, text="Add Recurring Event", command=add_recurring_event)
+recurring_button.pack(pady=10)
 
 #to add go to button
 go_today_button = Button(window, text="Go to today", command=go_to_today)
