@@ -4,39 +4,33 @@ from datetime import datetime
 import json
 from tkinter import simpledialog, messagebox
 
-#create the main window
+# Create the main window
 window = Tk()
 window.title("GUI Calendar")
-window.geometry("400x400")
+window.geometry("500x600")
 window.config(bg="#ADD8E6")
 
-#create a label for the calender title
-label = Label(window, text="", font=("Arial", 50), pady=50, bg="#ADD8E6")
+# Create a label for the calendar title
+label = Label(window, text="", font=("Arial", 30), pady=20, bg="#ADD8E6")
 label.pack()
 
-#create a frame to hold calender grid
+# Create a frame to hold the calendar grid
 frame = Frame(window)
 frame.pack()
 
-#get the current month and year
-now = datetime.now()
-current_day = now.day
-current_year = now.year
-current_month = now.month
-
-#label to show selected day
-selected_day_label = Label(window, text="Selected day : ")
+# Label to show selected day
+selected_day_label = Label(window, text="Selected day:", bg="#ADD8E6")
 selected_day_label.pack(pady=10)
 
-#load and save event functions
+# Load and save event functions
 events = {}
 
-#global variables to track
+# Global variables
 delete_event_button = None
 edit_event_button = None
 dark_mode_on = False
 
-#function to schedule an event
+# Function to schedule an event
 def schedule_event(day, month, year):
     event_text = simpledialog.askstring("Event", f"{day}-{month}-{year}")
     if event_text:
@@ -47,10 +41,10 @@ def schedule_event(day, month, year):
             events[event_date] = [event_text]
         save_events()
 
-#function to edit an event
+# Function to edit an event
 def edit_event(event_date):
     if event_date in events:
-        event_text = simpledialog.askstring("Edit Event", f"Edit event for date {event_date}:")
+        event_text = simpledialog.askstring("Edit Event", f"Edit event for {event_date}:")
         if event_text:
             events[event_date] = [event_text]
             save_events()
@@ -59,7 +53,7 @@ def edit_event(event_date):
     else:
         messagebox.showerror("Error", f"No event found for {event_date}.")
 
-#function to delete an event
+# Function to delete an event
 def delete_event(day, month, year):
     event_date = f"{day}-{month}-{year}"
     if event_date in events:
@@ -76,114 +70,93 @@ def delete_event(day, month, year):
     else:
         messagebox.showinfo("Info", f"No events for {event_date} to delete.")
 
-#function to save events to a JSON file
+# Function to save events to a JSON file
 def save_events():
-    with open("events.json","w") as f:
-        json.dump(events,f)
+    with open("events.json", "w") as f:
+        json.dump(events, f)
 
-#fuction to load events from a JSON file
+# Function to load events from a JSON file
 def load_events():
     global events
     try:
-        with open("events.json","r") as f:
+        with open("events.json", "r") as f:
             events = json.load(f)
     except FileNotFoundError:
         events = {}
 
-#function to toggle dark mode
+# Function to toggle dark mode
 def toggle_dark_mode():
     global dark_mode_on
     dark_mode_on = not dark_mode_on
     if dark_mode_on:
         window.config(bg="black")
         label.config(bg="black", fg="white")
-        
     else:
         window.config(bg="#ADD8E6")
         label.config(bg="#ADD8E6", fg="black")
 
-#function to display current month and year
+# Function to display the calendar
 def display_calendar(month, year):
     global current_day, current_month, current_year
-
-    #winfo.children() return the list of widgets in frame
     for widget in frame.winfo_children():
-        widget.destroy()    #clear the frame before adding new widgets
+        widget.destroy()  # Clear the frame before adding new widgets
 
-    #update the label with current month and year
-    if 1 <= month <= 12:
-        label.config(text=f"{calendar.month_name[month]} {year}")
-    else:
-        label.config(text=f"Error: Invalid Month {month}")
+    # Update the label with the current month and year
+    label.config(text=f"{calendar.month_name[month]} {year}")
 
-    #get the days of the week and add them to calender grid
-    days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-    for idx,day in enumerate(days):
-        day_label = Label(frame, text=day, font=("Times New Roman",35,"underline"), padx=10, pady=10)
+    # Get the days of the week and add them to the calendar grid
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    for idx, day in enumerate(days):
+        day_label = Label(frame, text=day, font=("Arial", 15, "bold"), padx=10, pady=10)
         day_label.grid(row=0, column=idx)
 
-    #get the month calender as a lis of a week
+    # Get the month calendar as a list of weeks
     cal = calendar.monthcalendar(year, month)
 
-    #add each day in a calender grid
-    for r,week in enumerate(cal,1):
-        for c,day in enumerate(week):
-            if day == 0:    #not in current month
-                day_label = Label(frame, text="", font=40, padx=10, pady=10)
+    # Add each day to the calendar grid
+    for r, week in enumerate(cal, 1):
+        for c, day in enumerate(week):
+            if day == 0:  # Not a valid day in the current month
+                day_label = Label(frame, text="", font=("Arial", 12), padx=10, pady=10)
             else:
-                #Check if today's day
-                if day == now.day and month == now.month and year == now.year:
-                    day_label = Label(frame, text=day, font=("Arial", 30, "bold"), bg="lightgray", padx=10, pady=10)
-                else: 
-                    day_label = Label(frame, text=day, font=40, padx=10, pady=10)
+                if day == current_day and month == current_month and year == current_year:
+                    day_label = Label(frame, text=day, font=("Arial", 12, "bold"), bg="lightgray", padx=10, pady=10)
+                else:
+                    day_label = Label(frame, text=day, font=("Arial", 12), padx=10, pady=10)
 
-            #bind a click event to each day
-            day_label.bind("<Button-1>", lambda event, d=day:on_day_click(d))
+            # Bind a click event to each day
+            day_label.bind("<Button-1>", lambda event, d=day: on_day_click(d))
 
-            day_label.grid(row=r,column=c)
+            day_label.grid(row=r, column=c)
 
-#display the calender
-if 1 <= current_month <= 12:
-    display_calendar(current_month, current_year)
-else:
-    print(f"Error: Invalid current month {current_month}")
-
-#function to handle day click events and show events
+# Function to handle day click events
 def on_day_click(day):
     global delete_event_button, edit_event_button
-
     schedule_event(day, current_month, current_year)
-
     event_date = f"{day}-{current_month}-{current_year}"
     if event_date in events:
-        event_list = "\n".join(events[event_date])
-        selected_day_label.config(text=f"Events for {event_date}:\n{event_list}")
+        selected_day_label.config(text=f"Events for {event_date}:\n{', '.join(events[event_date])}")
 
-         # Remove the old delete button and event button if it exists
+        # Remove old delete button and edit button if they exist
         if delete_event_button:
             delete_event_button.destroy()
         if edit_event_button:
             edit_event_button.destroy()
-            
-        # Add a button to delete events and edit events
-        edit_event_button = Button(window, text="Edit Event", command=lambda d=event_date :edit_event(d))
-        edit_event_button.pack(pady=10)
+
+        # Add a button to delete and edit events
+        edit_event_button = Button(window, text="Edit Event", command=lambda d=event_date: edit_event(d))
+        edit_event_button.pack(pady=5)
 
         delete_event_button = Button(window, text="Delete Event", command=lambda: delete_event(day, current_month, current_year))
-        delete_event_button.pack(pady=10)
+        delete_event_button.pack(pady=5)
     else:
         selected_day_label.config(text=f"No events for {event_date}")
 
-#function to go to button
-def go_to_today():
-    now = datetime.now()
-    display_calendar(now.month, now.year)
-
-#function to add recurring events
+# Function to add recurring events
 def add_recurring_event():
-    event_text = simpledialog.askstring("Recurring Event", "Enter recurring event:")
+    event_text = simpledialog.askstring("Recurring Event", "Enter a recurring event:")
     if event_text:
-        for month in range(1,13):
+        for month in range(1, 13):
             event_date = f"{current_day}-{month}-{current_year}"
             if event_date in events:
                 events[event_date].append(event_text)
@@ -191,41 +164,57 @@ def add_recurring_event():
                 events[event_date] = [event_text]
         save_events()
 
-#function to change the month and year
+# Function to go to today's date
+def go_to_today():
+    global current_day, current_month, current_year
+    now = datetime.now()
+    current_day, current_month, current_year = now.day, now.month, now.year
+    display_calendar(current_month, current_year)
+
+# Function to change the month and year
 def change_month(delta):
     global current_month, current_year
-
     current_month += delta
-
     if current_month > 12:
         current_month = 1
         current_year += 1
     elif current_month < 1:
         current_month = 12
         current_year -= 1
+    display_calendar(current_month, current_year)
 
-    display_calendar(current_month,current_year)
-
-#load the event when starting the program
+# Load the events when starting the program
 load_events()
 
-#to change the month and year add buttons
-prev_button = Button(window, text="<< Previous", command=lambda: change_month(-1), font=30, bg="lightgray")
-prev_button.pack(side=LEFT,padx=20)
+# Get the current date
+now = datetime.now()
+current_day = now.day
+current_year = now.year
+current_month = now.month
 
-next_button = Button(window, text="Next >>", command=lambda: change_month(1), font=30, bg="lightgray")
-next_button.pack(side=RIGHT,padx=20)
+# Display the calendar
+display_calendar(current_month, current_year)
 
-#button for dark mode
-dark_mode_button = Button(window, text="Dark Mode", command=toggle_dark_mode)
+# Buttons to change the month and year
+prev_button = Button(window, text="<< Previous", command=lambda: change_month(-1), font=("Arial", 12), bg="lightgray")
+prev_button.pack(side=LEFT, padx=20, pady=20)
+
+next_button = Button(window, text="Next >>", command=lambda: change_month(1), font=("Arial", 12), bg="lightgray")
+next_button.pack(side=RIGHT, padx=20, pady=20)
+
+# Button for dark mode
+dark_mode_button = Button(window, text="Toggle Dark Mode", command=toggle_dark_mode, font=("Arial", 12))
 dark_mode_button.pack(pady=10)
 
-#button to add recurring events
-recurring_button = Button(window, text="Add Recurring Event", command=add_recurring_event)
-recurring_button.pack(pady=10)
-
-#to add go to button
-go_today_button = Button(window, text="Go to today", command=go_to_today)
+# Button to go to today's date
+go_today_button = Button(window, text="Go to Today", command=go_to_today, font=("Arial", 12))
 go_today_button.pack(pady=10)
 
+# Button to add recurring events
+recurring_button = Button(window, text="Add Recurring Event", command=add_recurring_event, font=("Arial", 12))
+recurring_button.pack(pady=10)
+
+# Start the Tkinter main loop
 window.mainloop()
+
+
